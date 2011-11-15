@@ -1,0 +1,125 @@
+<html>
+    <head>
+        <title>CoreBuilder Main View</title>
+        <script>
+            function change(id,vis){
+                document.getElementById(id).style.display=vis;
+            }
+        </script>
+        <script>
+            function formSubmit(id)
+            {
+            document.getElementById(id).submit();
+            }
+        </script>
+        <table>
+            <tr>
+                <td>
+                    <img src="{{MEDIA_URL}}banner3.png" width="468" height="60" alt="{{MEDIA_URL}}banner3.png" />
+                </td>
+                <!--<td>
+                    <p>Test Header column 2</p>
+                </td>
+            </tr></!-->
+        </table>
+    </head>
+    <hr />
+    <form method='post' action='corebuilder/view_changed'>{% csrf_token %}
+        <label>View Selector</label>
+        <select name="View_selector">
+            {% if views %}
+                {% for v in views %}
+                    {% ifequal selected_view v %}
+                        <option value="{{v}}" selected="selected">{{v}}</option>
+                    {% else %}
+                        <option value="{{v}}">{{v}}</option>
+                    {% endifequal %}
+                {% endfor %}
+                <input id="view_submit" type="submit" value="Select" />
+            {% endif %}
+        </select>
+    </form>
+    <hr />
+    <table>
+        <tr>
+            <td width="150">
+                <body>
+                    <center>Categories</center>
+                    <form id="cat_form" method='post' action="corebuilder/cat_changed" onchange="formSubmit('cat_selector')">{% csrf_token %}
+                        <center><select id="cat_selector" name="Cat_selector" size="10" >
+                            {% if categories %}
+                                {% for cat in categories %}
+                                    {% ifequal selected_cat cat %}
+                                        <option value="{{cat}}" selected="selected">{{cat}}</option>
+                                    {% else %}
+                                        <option value="{{cat}}">{{cat}}</option>
+                                    {% endifequal %}
+                                {% endfor %}
+                            {% endif %}
+                        </select></center>
+                        <center><input id="cat_submit" type="submit" value="Select" /></center>
+                    </form>
+                </body>
+            </td>
+            <td width="150">
+                <body>
+                    <center>Packages</center>
+                    <form method='post' action="corebuilder/pkg_changed">{% csrf_token %}
+                        <center><select name="Pkg_selector" size="10">
+                            {% if packages %}
+                                {% for pkg in packages %}
+                                    {% ifequal selected_pkg pkg %}
+                                        <option value="{{pkg}}" selected="selected">{{pkg}}</option>
+                                    {% else %}
+                                        <option value="{{pkg}}">{{pkg}}</option>
+                                    {% endifequal %}
+                                {% endfor %}
+                            {% endif %}
+                        </select></center>
+                        <center><input type="submit" value="Select" /></center>
+                    </form>
+                </body>
+            </td>
+            <td width="150">
+                <body>
+                    <center>Versions</center>
+                    <form method='post' action="corebuilder/ver_changed">{% csrf_token %}
+                        <center><select name="Ver_selector" size="10">
+                            {% if versions %}
+                                {% for ver in versions %}
+                                    {% ifequal selected_ver ver %}
+                                        <option value="{{ver}}" selected="selected">{{ver}}</option>
+                                    {% else %}
+                                        <option value="{{ver}}">{{ver}}</option>
+                                    {% endifequal %}
+                                {% endfor %}
+                            {% endif %}
+                        </select></center>
+                        <center><input type="submit" value="Select" /></center>
+                    </form>
+                </body>
+            </td>
+        </tr>
+    </table>
+    <hr/>
+    Package Detail ...
+    <hr/>
+    Config options ...
+    <hr/>
+    Actions ...
+    <input id="merge" type="submit" value="Merge" action="corebuilder/merge">
+
+
+    <!--<script type="text/javascript">
+
+        var selectcat=document.getElementById("cat_selector")
+        selectcat.onchange=function(){ //run some code when "onchange" event fires
+         var chosenoption=this.options[this.selectedIndex] //this refers to "selectmenu"
+         if (chosenoption.value!="nothing"){
+          // filter the pkg_selector
+          document.getElementById("cat_selector").submit()
+         }
+        }
+
+    </script></!-->
+</html>
