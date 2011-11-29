@@ -1,32 +1,258 @@
 <html>
     <head>
         <title>CoreBuilder Main View</title>
-        <script>
-            function change(id,vis){
-                document.getElementById(id).style.display=vis;
-            }
-        </script>
-        <script>
-            function formSubmit(id)
-            {
-            document.getElementById(id).submit();
-            }
-        </script>
         <table>
             <tr>
                 <td>
-                    <img src="{{MEDIA_URL}}banner3.png" width="468" height="60" alt="{{MEDIA_URL}}banner3.png" />
+                    <img src="{{MEDIA_URL}}images/banner3.png" width="468" height="60" alt="{{MEDIA_URL}}images/banner3.png" />
                 </td>
                 <!--<td>
                     <p>Test Header column 2</p>
                 </td>
             </tr></!-->
         </table>
+
+        <!--<script src="http://code.jquery.com/jquery-latest.js"></script>-->
+        <script type="text/javascript" src="{{MEDIA_URL}}javascript/jquery.js"></script>
+
+        <script type="text/javascript">
+            window.onload = startForm;
+
+            function startForm()
+            // Sets up our selectors for automatic action when one is selected.
+            {
+                document.getElementById("view_select").selectedIndex = 0;
+                document.getElementById("view_select").onchange = getPkgs;
+                document.getElementById("Cat_select").selectedIndex = 0;
+                populatePkgs;
+                document.getElementById("Cat_select").onchange = populatePkgs;
+                document.getElementById("Pkg_select").onchange = getVers;
+                document.getElementById("Ver_select").onchange = getMeta;
+            }
+
+            pkgs = ["{{NONE}}"];
+            versions = ["{{NONE}}"];
+
+            function populateCats(cats)
+            {
+
+                var cat_select = document.getElementById("Cat_select")
+
+                cat_select.options.length = 0;
+                cat_select.options[0] = new Option(cats[0]);
+
+                for( var i=1; i<cats.length; i++ )
+                {
+                    cat = cats[i];
+                    cat_select.options[i] = new Option(cat);
+                }
+                if(cat_select.options.length == 0)
+                {
+                    cat_select.options[0] = new Option(cats[0]);
+                }
+            }
+
+
+            function populatePkgs()
+            // Populates the "Packages" selector for the selected "Category"
+            // from the pkgs variable previously downloaded.
+            {
+
+                var catStr = this.options[this.selectedIndex].value;
+
+                var pkg_select = document.getElementById("Pkg_select");
+                pkg_select.options.length = 0;
+                pkg_select.options[0] = new Option("{{NONE}}");
+
+                if(catStr == "{{ALL}}")
+                {
+                    for( var i=1; i<pkgs.length; i++ )
+                    {
+                        pkg_select.options[i] = new Option(pkgs[i]);
+                    }
+                }
+                if(catStr != "{{NONE}}")
+                {
+                    x = 1;
+                    for( var i=0; i<pkgs.length; i++ )
+                    {
+                        ps = pkgs[i].split("/");
+                        if( ps[0] == catStr )
+                        {
+                            pkg_select.options[x] = new Option(ps[1]);
+                            x++;
+                        }
+                    }
+                }
+                x = populateVer([])
+            }
+
+            function populateVer(vers)
+            // Populates the "Versions" selector with the passed in version list
+            {
+
+                var ver_select = document.getElementById("Ver_select")
+
+                ver_select.options.length = 0;
+                ver_select.options[0] = new Option("{{NONE}}");
+
+                for( var i=0; i<vers.length; i++ )
+                {
+                    ver_select.options[i+1] = new Option(vers[i]);
+                }
+                // Now reset the detail view
+                var x = removeSubnodes(document.getElementById("pkg_detail"));
+            }
+
+            function keys(obj)
+            // returns a list of keys in the object
+            {
+                var keys = [];
+                for(var key in obj)
+                {
+                    keys.push(key);
+                }
+                return keys;
+            }
+
+            function removeSubnodes(node)
+            {
+                // Remove the old list items if they exist
+                while(node.firstChild) node.removeChild(node.firstChild);
+            }
+
+            function displayMeta(cpv, metaobj)
+            // Display the metadata information for the selected cat/pkg-ver
+            {
+
+                //alert("MADE it to displayMeta()\n" + _keys.join(", "));
+
+                var detail = document.getElementById("pkg_detail");
+                var x = removeSubnodes(detail);
+
+                if(cpv)
+                {
+                    var _keys = keys(metaobj);
+
+                    var myElement = document.createElement("li");
+                    myElement.innerHTML = cpv;
+                    detail.appendChild(myElement);
+
+                    var key = '';
+                    var val = '';
+                    for( var i=0; i<_keys.length; i++ )
+                    {
+                        key = _keys[i];
+                        val = metaobj[key];
+                        myElement = document.createElement("li");
+                        myElement.innerHTML = key + ": " + val;
+                        detail.appendChild(myElement);
+                    }
+                }
+            }
+
+            function getPkgs()
+            // Ajax call. Gets the categories and packages lists for the
+            // selected view and then populates the "Categories" selector
+            {
+                $.getJSON("viewchanged/",
+                    {
+                        view: this.options[this.selectedIndex].value,
+                        format: "json"
+                    },
+                        function(json)
+                        {
+                            if (json['success'] == false){
+                                var message = "View selector Failed to get the" +
+                                    " selected views categories and pkgs data\n\n";
+                                alert(message + json['categories'] + "\n\n" + json['pkgs']);
+                            };
+                            pkgs = json['pkgs'];
+                            ret = populateCats(json['categories']);
+                        }
+                );
+            }
+
+            function getVers()
+            // Ajax call.  Gets the version list for the selected cat/pkg
+            // and then populates the Versions selector.
+            {
+                var sel_pkg = this.options[this.selectedIndex].value;
+                if(sel_pkg == "{{NONE}}")
+                {
+                    var ret = populateVer([]);
+                    return;
+                }
+
+                var cat_select = document.getElementById("Cat_select");
+                var sel_cat = cat_select.options[cat_select.selectedIndex].value;
+                if(sel_cat == "{{ALL}}")
+                {
+                    // check for cat/pkg entry
+                    var sp = sel_pkg.split("/");
+                    if(sp.length >1)
+                    {
+                        sel_pkg = sp[1];
+                        sel_cat = sp[0];
+                    }
+                }
+
+                $.getJSON("pkgchanged/",
+                    {
+                        cat: sel_cat,
+                        pkg: sel_pkg,
+                        format: "json"
+                    },
+                        function(json)
+                        {
+                            if (json['success'] == false){
+                                var message = "pkg selector Failed to get the" +
+                                    " package versions data for:\n\n";
+                                alert(message + json['cp'] + "\n\n" + json['versions']);
+                            };
+                            versions = json['versions'];
+                            ret = populateVer(json['versions']);
+                        }
+                );
+            }
+
+            function getMeta()
+            // Ajax call. Gets the cat/pkg-ver metadata for display in "Package Detail"
+            {
+                var selected_ver = this.options[this.selectedIndex].value;
+                if(selected_ver == "{{NONE}}")
+                {
+                    var x = removeSubnodes(document.getElementById("pkg_detail"));
+                    return;
+                }
+                var cat_select = document.getElementById("Cat_select");
+                var pkg_select = document.getElementById("Pkg_select");
+                $.getJSON("verchanged/",
+                    {
+                        cat: cat_select.options[cat_select.selectedIndex].value,
+                        pkg: pkg_select.options[pkg_select.selectedIndex].value,
+                        ver: selected_ver,
+                        format: "json"
+                    },
+                        function(json)
+                        {
+                            if (json['success'] == false){
+                                var message = "version selector Failed to get the" +
+                                    " package metadata data for:\n\n";
+                                alert(message + json['cpv'] + "\n\n" + json['meta']);
+                            };
+                            ret = displayMeta(json['cpv'], json['meta']);
+                        }
+                );
+            }
+
+        </script>
+
     </head>
     <hr />
-    <form method='post' action='corebuilder/view_changed'>{% csrf_token %}
+    <form id="view_form" >{% csrf_token %}
         <label>View Selector</label>
-        <select name="View_selector">
+        <select id="view_select" name="View_selector">
             {% if views %}
                 {% for v in views %}
                     {% ifequal selected_view v %}
@@ -35,7 +261,7 @@
                         <option value="{{v}}">{{v}}</option>
                     {% endifequal %}
                 {% endfor %}
-                <input id="view_submit" type="submit" value="Select" />
+                <!--<input id="view_submit" type="submit" value="Select" />-->
             {% endif %}
         </select>
     </form>
@@ -45,38 +271,21 @@
             <td width="150">
                 <body>
                     <center>Categories</center>
-                    <form id="cat_form" method='post' action="corebuilder/cat_changed" onchange="formSubmit('cat_selector')">{% csrf_token %}
-                        <center><select id="cat_selector" name="Cat_selector" size="10" >
-                            {% if categories %}
-                                {% for cat in categories %}
-                                    {% ifequal selected_cat cat %}
-                                        <option value="{{cat}}" selected="selected">{{cat}}</option>
-                                    {% else %}
-                                        <option value="{{cat}}">{{cat}}</option>
-                                    {% endifequal %}
-                                {% endfor %}
-                            {% endif %}
+                    <form id="cat_form" >{% csrf_token %}
+                        <center><select id="Cat_select" name="Cat_selector" size="10" >
+                            <option value="{{NONE}}">{{NONE}}</option>
                         </select></center>
-                        <center><input id="cat_submit" type="submit" value="Select" /></center>
+                        <!--<center><input id="cat_submit" type="submit" value="Select" /></center>/!-->
                     </form>
                 </body>
             </td>
             <td width="150">
                 <body>
                     <center>Packages</center>
-                    <form method='post' action="corebuilder/pkg_changed">{% csrf_token %}
-                        <center><select name="Pkg_selector" size="10">
-                            {% if packages %}
-                                {% for pkg in packages %}
-                                    {% ifequal selected_pkg pkg %}
-                                        <option value="{{pkg}}" selected="selected">{{pkg}}</option>
-                                    {% else %}
-                                        <option value="{{pkg}}">{{pkg}}</option>
-                                    {% endifequal %}
-                                {% endfor %}
-                            {% endif %}
+                    <form>{% csrf_token %}
+                        <center><select id="Pkg_select" name="Pkg_selector" size="10">
+                            <option value="{{NONE}}">{{NONE}}</option>
                         </select></center>
-                        <center><input type="submit" value="Select" /></center>
                     </form>
                 </body>
             </td>
@@ -84,42 +293,25 @@
                 <body>
                     <center>Versions</center>
                     <form method='post' action="corebuilder/ver_changed">{% csrf_token %}
-                        <center><select name="Ver_selector" size="10">
-                            {% if versions %}
-                                {% for ver in versions %}
-                                    {% ifequal selected_ver ver %}
-                                        <option value="{{ver}}" selected="selected">{{ver}}</option>
-                                    {% else %}
-                                        <option value="{{ver}}">{{ver}}</option>
-                                    {% endifequal %}
-                                {% endfor %}
-                            {% endif %}
+                        <center><select id="Ver_select" name="Ver_selector" size="10">
+                            <option value="{{NONE}}">{{NONE}}</option>
                         </select></center>
-                        <center><input type="submit" value="Select" /></center>
+                        <!--<center><input type="submit" value="Select" /></center>-->
                     </form>
                 </body>
             </td>
         </tr>
     </table>
     <hr/>
-    Package Detail ...
+    <div id="detail_div">
+        Package Detail ...<br>
+            <ul  id="pkg_detail">
+            </ul>
+    </div>
     <hr/>
-    Config options ...
+    <div id="config_div">
+        Config options ...
     <hr/>
     Actions ...
     <input id="merge" type="submit" value="Merge" action="corebuilder/merge">
-
-
-    <!--<script type="text/javascript">
-
-        var selectcat=document.getElementById("cat_selector")
-        selectcat.onchange=function(){ //run some code when "onchange" event fires
-         var chosenoption=this.options[this.selectedIndex] //this refers to "selectmenu"
-         if (chosenoption.value!="nothing"){
-          // filter the pkg_selector
-          document.getElementById("cat_selector").submit()
-         }
-        }
-
-    </script></!-->
 </html>
