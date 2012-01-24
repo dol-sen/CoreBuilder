@@ -26,6 +26,7 @@ def home(request):
             'selected_view': pkgviews.selected,
             'NONE': NONE,
             'ALL': ALL,
+            'legend': pkgs.legend,
         },
         context_instance=RequestContext(request),
         )
@@ -71,6 +72,7 @@ def pkg_changed(request):
         #print "pkg =", pkgs.selected_pkg
         results["cp"] = pkgs.selected_pkg
         results['versions'] = pkgs.versions(pkgs.selected_pkg)
+        results['legend'] = pkgs.legend_keys
         #print results['versions']
         results['success'] = True
         return HttpResponse(json.dumps(results), mimetype='application/json')
@@ -83,24 +85,23 @@ def get_metadata(request):
         'meta': [NONE],
         'cpv': ""
         }
-    c = p = v = ''
     if request.method == 'GET':
         GET = request.GET
-        if GET.has_key('cat'):
-            c = GET['cat']
-        if GET.has_key('pkg'):
-            p = GET['pkg']
-        if GET.has_key('ver'):
-            v = GET['ver']
-    cpv = c + "/" + p + "-" + v
-    print "cpv =", cpv
+        if GET.has_key('index'):
+            index = int(GET['index'])
+            ebuild = pkgs.shown_versions[index]
+    print index, ebuild
+    print "cpv =", ebuild.pkg_name()
     results['success'] = True
     results['meta'] = {
-        'description': "blah,blah, blah",
-        'maintainer': "superdev@gentoo.org",
-        'IUSE': "x, y, z"
+        'Description': ebuild.description,
+        'Long Description': ebuild.longdescription,
+        'Homepages': ebuild.homepages,
+        'Keywords': ebuild.keywords,
+        'IUSE': ebuild.iuse,
+        'License': ebuild.license,
         }
-    results['cpv'] = cpv
+    results['cpv'] = ebuild.pkg_name()
     print results
     return HttpResponse(json.dumps(results), mimetype='application/json')
 

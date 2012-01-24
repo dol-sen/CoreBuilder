@@ -4,16 +4,19 @@
         <table>
             <tr>
                 <td>
-                    <img src="{{MEDIA_URL}}images/banner3.png" width="468" height="60" alt="{{MEDIA_URL}}images/banner3.png" />
+                    <img src="{{MEDIA_URL}}images/banner4.png" width="468" height="60" alt="{{MEDIA_URL}}images/banner3.png" />
                 </td>
                 <!--<td>
                     <p>Test Header column 2</p>
                 </td>
             </tr></!-->
         </table>
-
+        <style type="text/css">
+        select, option {font-family:monospace;}
+        </style>
         <!--<script src="http://code.jquery.com/jquery-latest.js"></script>-->
         <script type="text/javascript" src="{{MEDIA_URL}}javascript/jquery.js"></script>
+        <script type="text/javascript" src="{{MEDIA_URL}}javascript/jPaq.js"></script>
 
         <script type="text/javascript">
             window.onload = startForm;
@@ -32,6 +35,7 @@
 
             pkgs = ["{{NONE}}"];
             versions = ["{{NONE}}"];
+            versions_data = [];
 
             function populateCats(cats)
             {
@@ -104,6 +108,45 @@
                 var x = removeSubnodes(document.getElementById("pkg_detail"));
             }
 
+            function build_versions()
+            // builds list of string representations of the ebuild versions
+            // to add to the version selector
+            {
+                var vers = [];
+                var max_v = 0;
+                var max_s = 4;
+
+                var data = [];
+                var ver = '';
+                var slot = '';
+                var repo = '';
+                var pad = "_";
+                var v_str = String;
+
+                // determine max lengths
+                for ( var i=0; i<versions_data.length; i++ )
+                {
+                    data = versions_data[i];
+                    ver = data[1];
+                    slot = data[2];
+                    max_v = Math.max(max_v, ver.length);
+                    max_s = Math.max(max_s, slot.length);
+                };
+
+                // create the padded string
+                for ( var i=0; i<versions_data.length; i++ )
+                {
+                    data = versions_data[i];
+                    ver = data[1];
+                    slot = data[2];
+                    repo = data[3];
+                    v_str = ver.padRight(max_v+1, pad).concat(
+                        ' | ', slot.padCenter(max_s, pad), ' | ', repo);
+                    vers.push(v_str)
+                }
+                return vers;
+            }
+
             function keys(obj)
             // returns a list of keys in the object
             {
@@ -150,6 +193,37 @@
                     }
                 }
             }
+
+            function displayConfig(cp, metaobj)
+            // Display the metadata information for the selected cat/pkg-ver
+            {
+
+                //alert("MADE it to displayMeta()\n" + _keys.join(", "));
+
+                var detail = document.getElementById("cfg_detail");
+                var x = removeSubnodes(detail);
+
+                /*if(cp)
+                {
+                    var _keys = keys(metaobj);
+
+                    var myElement = document.createElement("li");
+                    myElement.innerHTML = cp;
+                    detail.appendChild(myElement);
+
+                    var key = '';
+                    var val = '';
+                    for( var i=0; i<_keys.length; i++ )
+                    {
+                        key = _keys[i];
+                        val = metaobj[key];
+                        myElement = document.createElement("li");
+                        myElement.innerHTML = key + ": " + val;
+                        detail.appendChild(myElement);
+                    }
+                }*/
+            }
+
 
             function getPkgs()
             // Ajax call. Gets the categories and packages lists for the
@@ -210,8 +284,11 @@
                                     " package versions data for:\n\n";
                                 alert(message + json['cp'] + "\n\n" + json['versions']);
                             };
-                            versions = json['versions'];
-                            ret = populateVer(json['versions']);
+                            versions_data = json['versions'];
+                            //versions_legend = json['legend'];
+                            displayConfig(json['cp'], json['versions'])
+                            vers = build_versions();
+                            ret = populateVer(vers);
                         }
                 );
             }
@@ -219,12 +296,14 @@
             function getMeta()
             // Ajax call. Gets the cat/pkg-ver metadata for display in "Package Detail"
             {
-                var selected_ver = this.options[this.selectedIndex].value;
-                if(selected_ver == "{{NONE}}")
+                if(this.selectedIndex == 0)
                 {
                     var x = removeSubnodes(document.getElementById("pkg_detail"));
                     return;
                 }
+                var v_index = this.selectedIndex-1;
+                var v_data = versions_data[v_index];
+                var selected_ver = v_data[1];
                 var cat_select = document.getElementById("Cat_select");
                 var pkg_select = document.getElementById("Pkg_select");
                 $.getJSON("verchanged/",
@@ -232,6 +311,7 @@
                         cat: cat_select.options[cat_select.selectedIndex].value,
                         pkg: pkg_select.options[pkg_select.selectedIndex].value,
                         ver: selected_ver,
+                        index: v_index,
                         format: "json"
                     },
                         function(json)
@@ -245,6 +325,7 @@
                         }
                 );
             }
+
 
         </script>
 
@@ -279,7 +360,7 @@
                     </form>
                 </body>
             </td>
-            <td width="150">
+            <td width="200">
                 <body>
                     <center>Packages</center>
                     <form>{% csrf_token %}
@@ -289,9 +370,9 @@
                     </form>
                 </body>
             </td>
-            <td width="150">
+            <td width="250">
                 <body>
-                    <center>Versions</center>
+                    <center>Version &nbsp;&nbsp;&nbsp;   Slot &nbsp;&nbsp;&nbsp;  Repository</center>
                     <form method='post' action="corebuilder/ver_changed">{% csrf_token %}
                         <center><select id="Ver_select" name="Ver_selector" size="10">
                             <option value="{{NONE}}">{{NONE}}</option>
@@ -311,6 +392,9 @@
     <hr/>
     <div id="config_div">
         Config options ...
+            <ul  id="cfg_detail">
+            </ul>
+    </div>
     <hr/>
     Actions ...
     <input id="merge" type="submit" value="Merge" action="corebuilder/merge">

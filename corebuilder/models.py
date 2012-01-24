@@ -1,5 +1,11 @@
 
+from types import *
+
 from django.db import models
+
+from backend import pms_instance
+
+pms_lib = pms_instance.pms_lib
 
 # Create your models here.
 
@@ -18,23 +24,19 @@ ALL = 'All'
 NONE = '------- None -------'
 
 class Pkgs(object):
-    _pkgs = [NONE,
-        "cat-one/pkg1-1.2.0",
-        "cat-one/pkg1-1.2.1",
-        "cat-one/pkg2-1.2",
-        "cat-one/pkg8-1.8.0",
-        "cat-one/pkg9-1.2.0",
-        "cat-one/pkg10-1.2.10",
-        "cat-one/pkg11-1.2.11",
-        "cat-two/pkg3-1.0.3",
-        "cat-two/pkg4-1.0.4",
-        "cat-two/pkg5-1.0.5",
-        "cat-two/pkg6-1.0.6",
-        "cat-two/pkg7-1.0.7",
-    ]
+    _pkgs = [ALL, NONE]
+    _pkgs += pms_lib.get_allnodes()
     selected_cat = ''
     selected_pkg = ''
     selected_ver = ''
+    shown_versions = []
+    legend_keys = ['i', 'ver', 'slot', 'repo_name',
+            'repo_path', 'hardmasked', 'unmasked',
+            'keywordmasked']
+
+    legend = {'i': 0, 'ver': 1, 'slot': 2, 'repo_name': 3,
+            'repo_path': 4, 'hardmasked': 5, 'unmasked': 6,
+            'keywordmasked': 7}
 
 
     def select(self, cat=ALL, include_versions=False):
@@ -53,7 +55,7 @@ class Pkgs(object):
             pkgs = set()
             for p in self._pkgs:
                 if p not in [ALL, NONE]: # and cat in p
-                    pkgs.add(p.rsplit('-', 1)[0])
+                    pkgs.add(p)
             pkgs = sorted(pkgs)
         #print len(pkgs), pkgs
 
@@ -62,18 +64,35 @@ class Pkgs(object):
 
 
     def versions(self, cp):
+        self.shown_versions = pms_lib.get_versions(cp, include_masked = True)
+        self.shown_versions.sort(reverse=True)
         vers = []
-        for cpv in self._pkgs:
-            cps = cpv.rsplit('-', 1)
-            if cp == cps[0]:
-                vers.append(cps[1])
-        return sorted(vers)
+        i = 0
+        for cpv in self.shown_versions:
+            vers.append(self.build_ver_list(cpv, i))
+            i += 1
+        return vers
+
+    def build_ver_list(self, cpv, i):
+        ver = cpv.get_version()
+        slot = cpv.slot
+        ovl_path = cpv.repo_path
+        if type(ovl_path) is IntType: # catch obsolete
+            ovl_path = "Ebuild version no longer supported"
+            ovl_label = "Obsolete"
+        elif "/packages" in ovl_path:
+            ovl_label = "Packages"
+        else:
+            ovl_label = cpv.repo_name
+        data = [i, ver, cpv.slot, ovl_label, ovl_path, cpv.hardmasked,
+            cpv.unmasked, cpv.keywordmasked]
+        return data
 
 
 pkgs = Pkgs()
 
 class Categories(object):
-    _categories = [NONE, ALL, "cat-one", "cat-two", "cat-three"]
+    _categories = [NONE, ALL]
 
     def __unicoide__(self):
         return "%s" % ', '.join(self._categories)
@@ -81,14 +100,15 @@ class Categories(object):
     def _populate(self, pkgs):
         newcats = set()
         for pkg in pkgs:
-            newcat.add(pkg.split("/")[0])
-        self._categories = list(newcats)
+            newcats.add(pkg.split("/")[0])
+        self._categories = [NONE, ALL] + list(newcats)
 
     def get(self):
         return sorted(self._categories)
 
 
 cats = Categories()
+cats._populate(pkgs.select())
 
 class Packages(models.Model):
     pkg = models.CharField(max_length=50)
