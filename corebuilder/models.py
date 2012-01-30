@@ -24,11 +24,6 @@ ALL = 'All'
 NONE = '------- None -------'
 
 class Pkgs(object):
-    _pkgs = [ALL, NONE]
-    selected_cat = ''
-    selected_pkg = ''
-    selected_ver = ''
-    shown_versions = []
     legend_keys = ['i', 'ver', 'slot', 'repo_name',
             'repo_path', 'hardmasked', 'unmasked',
             'keywordmasked']
@@ -38,10 +33,17 @@ class Pkgs(object):
             'keywordmasked': 7}
 
     def __init__(self, get_func=None):
+        self._pkgs = [ALL, NONE]
+        self.selected_cat = ''
+        self.selected_pkg = ''
+        self.selected_ver = ''
+        self.shown_versions = []
+
         if get_func:
             self._pkgs += get_func()
 
     def select(self, cat=ALL, include_versions=False):
+        #print "Pkgs.select(), self=", self
         if cat in ["All", ALL] and include_versions:
             pkgs = self._pkgs[:]
             #pkgs = [p.split('/')[1] for p in self._pkgs]
@@ -59,7 +61,7 @@ class Pkgs(object):
                 if p not in [ALL, NONE]: # and cat in p
                     pkgs.add(p)
             pkgs = sorted(pkgs)
-        #print len(pkgs), pkgs
+        #print "Pkgs.select(), len pkgs=", len(pkgs)
 
         self.selected_cat = cat
         return pkgs
