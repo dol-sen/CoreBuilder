@@ -9,7 +9,7 @@ from django.http import HttpResponseRedirect, HttpResponse
 import json
 
 # Create your views here.
-from models import Packages, cats, pkgs, ALL, NONE, pkgviews
+from models import ALL, NONE, pkgviews
 from CoreBuilder.settings import STATIC_URL, JS_URL
 #from .response import JSONResponse
 
@@ -17,16 +17,16 @@ from CoreBuilder.settings import STATIC_URL, JS_URL
 def home(request):
     return render_to_response('main.html',
         {
-            'selected_cat': pkgs.selected_cat,
-            'selected_pkg': pkgs.selected_pkg,
-            'selected_ver': pkgs.selected_ver,
+            'selected_cat': '',
+            'selected_pkg': '',
+            'selected_ver': '',
             'MEDIA_URL': STATIC_URL,
             'JS_URL': JS_URL,
             'views': pkgviews.all(),
             'selected_view': pkgviews.selected,
             'NONE': NONE,
             'ALL': ALL,
-            'legend': pkgs.legend,
+            'legend': pkgviews.pkg_legend,
         },
         context_instance=RequestContext(request),
         )
@@ -65,14 +65,15 @@ def pkg_changed(request):
         if GET.has_key('cat') and GET.has_key('pkg'):
             cat = request.GET['cat']
             pkg = request.GET['pkg']
-            pkgs.selected_pkg = cat + "/" + pkg
+            pkgviews.pkgs[pkgviews.selected].selected_pkg = cat + "/" + pkg
         else:
-            pkgs.selected_pkg = ''
-        pkgs.selected_ver = ''
-        #print "pkg =", pkgs.selected_pkg
-        results["cp"] = pkgs.selected_pkg
-        results['versions'] = pkgs.versions(pkgs.selected_pkg)
-        results['legend'] = pkgs.legend_keys
+            pkgviews.pkgs[pkgviews.selected].selected_pkg = ''
+        pkgviews.pkgs[pkgviews.selected].selected_ver = ''
+        print "pkg =", pkgviews.pkgs[pkgviews.selected].selected_pkg
+        results["cp"] = pkgviews.pkgs[pkgviews.selected].selected_pkg
+        results['versions'] = pkgviews.pkgs[pkgviews.selected].versions(
+            pkgviews.pkgs[pkgviews.selected].selected_pkg)
+        results['legend'] = pkgviews.pkg_legend_keys
         #print results['versions']
         results['success'] = True
         return HttpResponse(json.dumps(results), mimetype='application/json')
@@ -89,7 +90,7 @@ def get_metadata(request):
         GET = request.GET
         if GET.has_key('index'):
             index = int(GET['index'])
-            ebuild = pkgs.shown_versions[index]
+            ebuild = pkgviews.pkgs[pkgviews.selected].shown_versions[index]
     print index, ebuild
     print "cpv =", ebuild.pkg_name()
     results['success'] = True

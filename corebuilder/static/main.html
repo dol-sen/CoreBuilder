@@ -11,15 +11,28 @@
                 </td>
             </tr></!-->
         </table>
+        <link rel="stylesheet" href="{{MEDIA_URL}}css/general.css" type="text/css" media="screen" />
         <style type="text/css">
-        select, option {font-family:monospace;}
+            select, option {font-family:monospace;}
         </style>
         <!--<script src="http://code.jquery.com/jquery-latest.js"></script>-->
         <script type="text/javascript" src="{{MEDIA_URL}}javascript/jquery.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}javascript/jPaq.js"></script>
+        <!--<script type="text/javascript" src="{{MEDIA_URL}}javascript/main.js"></script>-->
+        <script type="text/javascript" src="{{MEDIA_URL}}javascript/events.js"></script>
+        <script type="text/javascript" src="{{MEDIA_URL}}javascript/datafunctions.js"></script>
+        <!--<link rel="stylesheet" href="{{MEDIA_URL}}javascript/development-bundle/themes/ui-lightness/jquery.ui.all.css">
+        <link rel="stylesheet" href="{{MEDIA_URL}}javascript/css/ui-lightness/jquery-1.8.17-custom.css">
+        <script src="{{MEDIA_URL}}javascript/development-bundle/ui/jquery.ui.core.js"></script>
+        <script src="{{MEDIA_URL}}javascript/development-bundle/ui/jquery.ui.widget.js"></script>
+        <script src="{{MEDIA_URL}}javascript/development-bundle/ui/jquery.ui.mouse.js"></script>
+        <script src="{{MEDIA_URL}}javascript/development-bundle/ui/jquery.ui.sortable.js"></script>
+        <script src="{{MEDIA_URL}}javascript/development-bundle/ui/jquery.ui.tabs.js"></script>-->
 
         <script type="text/javascript">
+
             window.onload = startForm;
+
 
             function startForm()
             // Sets up our selectors for automatic action when one is selected.
@@ -31,371 +44,155 @@
                 document.getElementById("Cat_select").onchange = populatePkgs;
                 document.getElementById("Pkg_select").onchange = getVers;
                 document.getElementById("Ver_select").onchange = getMeta;
+                document.getElementById("deps").onclick = getDeps;
+                document.getElementById("chglog").onclick = getChglog;
+                document.getElementById("inst_files").onclick = getInst_files;
+                document.getElementById("ebuild").onclick = getEbuild;
+                document.getElementById("use").onclick = getUse;
+                document.getElementById("cflags").onclick = getCflags;
             }
 
+            var NONE = "{{NONE}}";
+            var ALL = "{{ALL}}";
             pkgs = ["{{NONE}}"];
             versions = ["{{NONE}}"];
             versions_data = [];
+            current_pkg = "";
 
-            function populateCats(cats)
-            {
+            var tabs = ["summary", "deps", "chglog", "inst_files", "ebuild", "use", "cflags"];
+            var tabs_loaded = {"summary":false, "deps":false, "chglog":false,
+                "inst_files":false, "ebuild":false, "use":false, "cflags":false};
 
-                var cat_select = document.getElementById("Cat_select")
+            // Initialize our pkg_notebook tabs
+            /*$(function() {
+                $( "#pkg_notebook" ).tabs().find( ".ui-tabs-nav" ).sortable({ axis: "x" });
+            });*/
 
-                cat_select.options.length = 0;
-                cat_select.options[0] = new Option(cats[0]);
-
-                for( var i=1; i<cats.length; i++ )
-                {
-                    cat = cats[i];
-                    cat_select.options[i] = new Option(cat);
-                }
-                if(cat_select.options.length == 0)
-                {
-                    cat_select.options[0] = new Option(cats[0]);
-                }
-            }
-
-
-            function populatePkgs()
-            // Populates the "Packages" selector for the selected "Category"
-            // from the pkgs variable previously downloaded.
-            {
-
-                var catStr = this.options[this.selectedIndex].value;
-
-                var pkg_select = document.getElementById("Pkg_select");
-                pkg_select.options.length = 0;
-                pkg_select.options[0] = new Option("{{NONE}}");
-
-                if(catStr == "{{ALL}}")
-                {
-                    for( var i=1; i<pkgs.length; i++ )
-                    {
-                        pkg_select.options[i] = new Option(pkgs[i]);
-                    }
-                }
-                if(catStr != "{{NONE}}")
-                {
-                    x = 1;
-                    for( var i=0; i<pkgs.length; i++ )
-                    {
-                        ps = pkgs[i].split("/");
-                        if( ps[0] == catStr )
-                        {
-                            pkg_select.options[x] = new Option(ps[1]);
-                            x++;
-                        }
-                    }
-                }
-                x = populateVer([])
-            }
-
-            function populateVer(vers)
-            // Populates the "Versions" selector with the passed in version list
-            {
-
-                var ver_select = document.getElementById("Ver_select")
-
-                ver_select.options.length = 0;
-                ver_select.options[0] = new Option("{{NONE}}");
-
-                for( var i=0; i<vers.length; i++ )
-                {
-                    ver_select.options[i+1] = new Option(vers[i]);
-                }
-                // Now reset the detail view
-                var x = removeSubnodes(document.getElementById("pkg_detail"));
-            }
-
-            function build_versions()
-            // builds list of string representations of the ebuild versions
-            // to add to the version selector
-            {
-                var vers = [];
-                var max_v = 0;
-                var max_s = 4;
-
-                var data = [];
-                var ver = '';
-                var slot = '';
-                var repo = '';
-                var pad = "_";
-                var v_str = String;
-
-                // determine max lengths
-                for ( var i=0; i<versions_data.length; i++ )
-                {
-                    data = versions_data[i];
-                    ver = data[1];
-                    slot = data[2];
-                    max_v = Math.max(max_v, ver.length);
-                    max_s = Math.max(max_s, slot.length);
-                };
-
-                // create the padded string
-                for ( var i=0; i<versions_data.length; i++ )
-                {
-                    data = versions_data[i];
-                    ver = data[1];
-                    slot = data[2];
-                    repo = data[3];
-                    v_str = ver.padRight(max_v+1, pad).concat(
-                        ' | ', slot.padCenter(max_s, pad), ' | ', repo);
-                    vers.push(v_str)
-                }
-                return vers;
-            }
-
-            function keys(obj)
-            // returns a list of keys in the object
-            {
-                var keys = [];
-                for(var key in obj)
-                {
-                    keys.push(key);
-                }
-                return keys;
-            }
-
-            function removeSubnodes(node)
-            {
-                // Remove the old list items if they exist
-                while(node.firstChild) node.removeChild(node.firstChild);
-            }
-
-            function displayMeta(cpv, metaobj)
-            // Display the metadata information for the selected cat/pkg-ver
-            {
-
-                //alert("MADE it to displayMeta()\n" + _keys.join(", "));
-
-                var detail = document.getElementById("pkg_detail");
-                var x = removeSubnodes(detail);
-
-                if(cpv)
-                {
-                    var _keys = keys(metaobj);
-
-                    var myElement = document.createElement("li");
-                    myElement.innerHTML = cpv;
-                    detail.appendChild(myElement);
-
-                    var key = '';
-                    var val = '';
-                    for( var i=0; i<_keys.length; i++ )
-                    {
-                        key = _keys[i];
-                        val = metaobj[key];
-                        myElement = document.createElement("li");
-                        myElement.innerHTML = key + ": " + val;
-                        detail.appendChild(myElement);
-                    }
-                }
-            }
-
-            function displayConfig(cp, metaobj)
-            // Display the metadata information for the selected cat/pkg-ver
-            {
-
-                //alert("MADE it to displayMeta()\n" + _keys.join(", "));
-
-                var detail = document.getElementById("cfg_detail");
-                var x = removeSubnodes(detail);
-
-                /*if(cp)
-                {
-                    var _keys = keys(metaobj);
-
-                    var myElement = document.createElement("li");
-                    myElement.innerHTML = cp;
-                    detail.appendChild(myElement);
-
-                    var key = '';
-                    var val = '';
-                    for( var i=0; i<_keys.length; i++ )
-                    {
-                        key = _keys[i];
-                        val = metaobj[key];
-                        myElement = document.createElement("li");
-                        myElement.innerHTML = key + ": " + val;
-                        detail.appendChild(myElement);
-                    }
-                }*/
-            }
-
-
-            function getPkgs()
-            // Ajax call. Gets the categories and packages lists for the
-            // selected view and then populates the "Categories" selector
-            {
-                $.getJSON("viewchanged/",
-                    {
-                        view: this.options[this.selectedIndex].value,
-                        format: "json"
-                    },
-                        function(json)
-                        {
-                            if (json['success'] == false){
-                                var message = "View selector Failed to get the" +
-                                    " selected views categories and pkgs data\n\n";
-                                alert(message + json['categories'] + "\n\n" + json['pkgs']);
-                            };
-                            pkgs = json['pkgs'];
-                            ret = populateCats(json['categories']);
-                        }
-                );
-            }
-
-            function getVers()
-            // Ajax call.  Gets the version list for the selected cat/pkg
-            // and then populates the Versions selector.
-            {
-                var sel_pkg = this.options[this.selectedIndex].value;
-                if(sel_pkg == "{{NONE}}")
-                {
-                    var ret = populateVer([]);
-                    return;
-                }
-
-                var cat_select = document.getElementById("Cat_select");
-                var sel_cat = cat_select.options[cat_select.selectedIndex].value;
-                if(sel_cat == "{{ALL}}")
-                {
-                    // check for cat/pkg entry
-                    var sp = sel_pkg.split("/");
-                    if(sp.length >1)
-                    {
-                        sel_pkg = sp[1];
-                        sel_cat = sp[0];
-                    }
-                }
-
-                $.getJSON("pkgchanged/",
-                    {
-                        cat: sel_cat,
-                        pkg: sel_pkg,
-                        format: "json"
-                    },
-                        function(json)
-                        {
-                            if (json['success'] == false){
-                                var message = "pkg selector Failed to get the" +
-                                    " package versions data for:\n\n";
-                                alert(message + json['cp'] + "\n\n" + json['versions']);
-                            };
-                            versions_data = json['versions'];
-                            //versions_legend = json['legend'];
-                            displayConfig(json['cp'], json['versions'])
-                            vers = build_versions();
-                            ret = populateVer(vers);
-                        }
-                );
-            }
-
-            function getMeta()
-            // Ajax call. Gets the cat/pkg-ver metadata for display in "Package Detail"
-            {
-                if(this.selectedIndex == 0)
-                {
-                    var x = removeSubnodes(document.getElementById("pkg_detail"));
-                    return;
-                }
-                var v_index = this.selectedIndex-1;
-                var v_data = versions_data[v_index];
-                var selected_ver = v_data[1];
-                var cat_select = document.getElementById("Cat_select");
-                var pkg_select = document.getElementById("Pkg_select");
-                $.getJSON("verchanged/",
-                    {
-                        cat: cat_select.options[cat_select.selectedIndex].value,
-                        pkg: pkg_select.options[pkg_select.selectedIndex].value,
-                        ver: selected_ver,
-                        index: v_index,
-                        format: "json"
-                    },
-                        function(json)
-                        {
-                            if (json['success'] == false){
-                                var message = "version selector Failed to get the" +
-                                    " package metadata data for:\n\n";
-                                alert(message + json['cpv'] + "\n\n" + json['meta']);
-                            };
-                            ret = displayMeta(json['cpv'], json['meta']);
-                        }
-                );
-            }
-
-
-        </script>
-
+    </script>
     </head>
-    <hr />
-    <form id="view_form" >{% csrf_token %}
-        <label>View Selector</label>
-        <select id="view_select" name="View_selector">
-            {% if views %}
-                {% for v in views %}
-                    {% ifequal selected_view v %}
-                        <option value="{{v}}" selected="selected">{{v}}</option>
-                    {% else %}
-                        <option value="{{v}}">{{v}}</option>
-                    {% endifequal %}
-                {% endfor %}
-                <!--<input id="view_submit" type="submit" value="Select" />-->
-            {% endif %}
-        </select>
-    </form>
-    <hr />
-    <table>
-        <tr>
-            <td width="150">
-                <body>
-                    <center>Categories</center>
-                    <form id="cat_form" >{% csrf_token %}
-                        <center><select id="Cat_select" name="Cat_selector" size="10" >
-                            <option value="{{NONE}}">{{NONE}}</option>
-                        </select></center>
-                        <!--<center><input id="cat_submit" type="submit" value="Select" /></center>/!-->
+    <body>
+        <hr />
+        <table>
+            <tr>
+                <td>
+                    <form id="view_form" >{% csrf_token %}
+                        <label>View Selector</label>
+                        <select id="view_select" name="View_selector">
+                            {% if views %}
+                                {% for v in views %}
+                                    {% ifequal selected_view v %}
+                                        <option value="{{v}}" selected="selected">{{v}}</option>
+                                    {% else %}
+                                        <option value="{{v}}">{{v}}</option>
+                                    {% endifequal %}
+                                {% endfor %}
+                                <!--<input id="view_submit" type="submit" value="Select" />-->
+                            {% endif %}
+                        </select>
                     </form>
-                </body>
-            </td>
-            <td width="200">
-                <body>
-                    <center>Packages</center>
-                    <form>{% csrf_token %}
-                        <center><select id="Pkg_select" name="Pkg_selector" size="10">
-                            <option value="{{NONE}}">{{NONE}}</option>
-                        </select></center>
-                    </form>
-                </body>
-            </td>
-            <td width="250">
-                <body>
-                    <center>Version &nbsp;&nbsp;&nbsp;   Slot &nbsp;&nbsp;&nbsp;  Repository</center>
-                    <form method='post' action="corebuilder/ver_changed">{% csrf_token %}
-                        <center><select id="Ver_select" name="Ver_selector" size="10">
-                            <option value="{{NONE}}">{{NONE}}</option>
-                        </select></center>
-                        <!--<center><input type="submit" value="Select" /></center>-->
-                    </form>
-                </body>
-            </td>
-        </tr>
-    </table>
-    <hr/>
-    <div id="detail_div">
-        Package Detail ...<br>
-            <ul  id="pkg_detail">
+                </td>
+                <td>
+                    &nbsp;&nbsp;&nbsp;Actions
+                    <input id="merge" type="submit" value="Merge" action="corebuilder/merge">
+                    <input id="unmerge" type="submit" value="UnMerge" action="corebuilder/merge">
+                </td>
+            </tr>
+        </table>
+        <hr />
+        <table>
+            <tr>
+                <td width="150">
+                    <body>
+                        <center><b>Categories</b></center>
+                        <form id="cat_form" >{% csrf_token %}
+                            <center><select id="Cat_select" name="Cat_selector" size="10" >
+                                <option value="{{NONE}}">{{NONE}}</option>
+                            </select></center>
+                            <!--<center><input id="cat_submit" type="submit" value="Select" /></center>/!-->
+                        </form>
+                    </body>
+                </td>
+                <td width="200">
+                    <body>
+                        <center><b>Packages</b></center>
+                        <form>{% csrf_token %}
+                            <center><select id="Pkg_select" name="Pkg_selector" size="10">
+                                <option value="{{NONE}}">{{NONE}}</option>
+                            </select></center>
+                        </form>
+                    </body>
+                </td>
+                <td width="250">
+                    <body>
+                        <center><b>Version &nbsp;&nbsp;&nbsp;   Slot &nbsp;&nbsp;&nbsp;  Repository</b></center>
+                        <form method='post' action="corebuilder/ver_changed">{% csrf_token %}
+                            <center><select id="Ver_select" name="Ver_selector" size="10">
+                                <option value="{{NONE}}">{{NONE}}</option>
+                            </select></center>
+                            <!--<center><input type="submit" value="Select" /></center>-->
+                        </form>
+                    </body>
+                </td>
+            </tr>
+        </table>
+        <hr/>
+        <div id="pkg_notebook">
+            <!--<ul>
+                <li id="summary"><a href="#tab_summary">Summary</a></li>
+                <li id="deps"><a href="#tab_deps">Dependencies</a></li>
+                <li id="chglog"><a href="#tab_chglog">ChangeLog</a></li>
+                <li id="inst_files"><a href="#tab_inst_files">Installed Files</a></li>
+                <li id="ebuild"><a href="#tab_ebuild">Ebuild</a></li>
+                <li id="use"><a href="#tab_use">Use Flags</a></li>
+                <li id="cflags"><a href="#tab_cflags">C, CXX</a></li>
+            </ul>-->
+            <ul class="menu">
+                <li id="summary">Summary</li>
+                <li id="deps">Dependencies</li>
+                <li id="chglog">ChangeLog</li>
+                <li id="inst_files">Installed Files</li>
+                <li id="ebuild">Ebuild</li>
+                <li id="use">Use Flags</li>
+                <li id="cflags">C, CXX</li>
             </ul>
-    </div>
-    <hr/>
-    <div id="config_div">
-        Config options ...
-            <ul  id="cfg_detail">
-            </ul>
-    </div>
-    <hr/>
-    Actions ...
-    <input id="merge" type="submit" value="Merge" action="corebuilder/merge">
+            <span class="clear"></span>
+            <div id="tab_summary" class="pkg_notebook summary">
+                <ul id="pkg_detail">
+                </ul>
+            </div>
+            <div id="tab_deps" class="pkg_notebook deps">
+                <div id="pkg_deps">
+                    <ul>
+                    </ul>
+                </div>
+            </div>
+            <div id="tab_chglog" class="pkg_notebook chglog">
+                <div id="pkg_chglog">
+                    <ul>
+                    </ul>
+                </div>
+            </div>
+            <div id="tab_inst_files" class="pkg_notebook inst_files">
+                <div id="pkg_inst_files">
+                    <ul>
+                    </ul>
+                </div>
+            </div>
+            <div id="tab_ebuild" class="pkg_notebook ebuild">
+                <div id="pkg_ebuild">
+                </div>
+            </div>
+            <div id="tab_use" class="pkg_notebook use">
+                <div id="pkg_use">
+                </div>
+            </div>
+            <div id="tab_cflags" class="pkg_notebook cflags">
+                <div id="pkg_cflags">
+                </div>
+            </div>
+        </div>
+        <hr/>
+        <div id="debug">
+        </div>
+    </body>
 </html>
