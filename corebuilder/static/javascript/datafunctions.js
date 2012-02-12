@@ -228,8 +228,10 @@ function displayUse(cpv, metaobj)
 }
 
 function displayConfig(cpv, metaobj)
-// Display the metadata information for the selected cat/pkg-ver
+// Display the config files for editing
 {
+    var detail = document.getElementById("pkg_cflags");
+    var x = removeSubnodes(detail);
 
     if(cpv)
     {
@@ -355,7 +357,7 @@ function getDeps(){
     if (tabs_loaded["deps"]){
         return;
     };
-    data = {"module": "NotImplemented"}
+    data = {"module": "NotImplemented"};
     displayDeps(current_pkg, data);
 }
 
@@ -365,25 +367,27 @@ function getChglog(){
     if (tabs_loaded["chglog"]){
         return;
     };
-    data = {"module": "NotImplemented"}
+    data = {"module": "NotImplemented"};
     displayChglog(current_pkg, data);
 }
+
 function getInst_files(){
     // Ajax call.  Gets the installed files list
 
     if (tabs_loaded["inst_files"]){
         return;
     };
-    data = {"module": "NotImplemented"}
+    data = {"module": "NotImplemented"};
     displayInst_files(current_pkg, data);
 }
+
 function getEbuild(){
     // Ajax call.  Gets the ebuild
 
     if (tabs_loaded["ebuild"]){
         return;
     };
-    data = {"module": "NotImplemented"}
+    data = {"module": "NotImplemented"};
     displayEbuild(current_pkg, data);
 }
 
@@ -393,7 +397,7 @@ function getUse(){
     if (tabs_loaded["use"]){
         return;
     };
-    data = {"module": "NotImplemented"}
+    data = {"module": "NotImplemented"};
     displayUse(current_pkg, data);
 }
 
@@ -403,7 +407,7 @@ function getCflags(){
     if (tabs_loaded["cflags"]){
         return;
     };
-    data = {"module": "NotImplemented"}
+    data = {"module": "NotImplemented"};
     displayConfig(current_pkg, data);
 }
 
