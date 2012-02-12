@@ -121,12 +121,12 @@ class Views(object):
             "-- Select --": Pkgs(),
             "Trees": None,
             "Installed": None,
-            "Not Installed": None
+            "Not_Installed": None
         }
         self.cats = {
             "Trees": None,
             "Installed": None,
-            "Not Installed": None
+            "Not_Installed": None
         }
 
     def all(self):
@@ -137,6 +137,7 @@ class Views(object):
         if view in ["-- Select --"]:
             _cats = [NONE]
         elif view in ["Trees", "Installed", "Not_Installed"]:
+            print "Views.select(): made it here :)"
             cat = getattr(self, view)()
             if cat:
                 _cats = cat.get()
@@ -169,10 +170,22 @@ class Views(object):
 
     def Not_Installed(self):
         if not self.cats["Not_Installed"]:
-            print "Views.Not_Installed(), new NOT_Installed lists"
-            self.pkgs["Not_Installed"] = list(
-                set(self.pkgs["Trees"]).difference(
-                    set(self.pkgs["Installed"])))
+            ct, pt = self.select("Trees")
+            ci, pi = self.select("Installed")
+            try:
+                print "Views.Not_Installed(), new Not_Installed lists"
+                spt = set(pt)
+                print len(spt)
+                spi = set(pi)
+                print len(spi)
+                print
+                pkgset = spt.difference(spi)
+                print len(pkgset)
+                self.pkgs["Not_Installed"] = Pkgs()
+                self.pkgs["Not_Installed"]._pkgs = list(pkgset)
+            except Exeption as e:
+                print "Views.Not_Installed(), Exeption", e
+
             print "Views.Not_Installed(), pks length = ", len(self.pkgs["Not_Installed"]._pkgs)
             self.cats["Not_Installed"] = Categories()
             self.cats["Not_Installed"]._populate(self.pkgs["Not_Installed"].select())
