@@ -5,6 +5,7 @@ from django.template import RequestContext
 
 from django.http import HttpResponseRedirect, HttpResponse
 #from django.error import MultiValueDictKeyError
+from django.core.context_processors import csrf
 
 #from django.contrib.auth.decorators import login_required
 
@@ -162,6 +163,7 @@ def merge(request):
         results['cpv'] = GET['cpv']
     print "cpv =", results['cpv']
     results['success'] = True
+    return HttpResponse(json.dumps(results), mimetype='application/json')
 
 
 def unmerge(request):
@@ -175,4 +177,5 @@ def unmerge(request):
         results['cpv'] = GET['cpv']
     print "cpv =", results['cpv']
     results['success'] = True
+    return HttpResponse(json.dumps(results), mimetype='application/json')
 

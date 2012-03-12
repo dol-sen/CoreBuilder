@@ -437,24 +437,16 @@ function getCflags(){
     data = {"module": "NotImplemented"};
     displayConfig(current_pkg, data);
 }
-/*  For whatever reason, the following code breaks basic operation.
+
 function doMerge(){
     // Ajax call. merge the selected pkg
-    var v_index = document.getElementById("Ver_select").selectedIndex-1;
-    if (v_index == 0){
+
+    if (current_pkg == ''){
         return;
-    }
-    var v_data = versions_data[v_index];
-    var selected_ver = v_data[1];
-    var cat_select = document.getElementById("Cat_select");
-    var pkg_select = document.getElementById("Pkg_select");
+    };
     $.getJSON("merge/",
         {
-            cat: cat_select.options[cat_select.selectedIndex].value,
-            pkg: pkg_select.options[pkg_select.selectedIndex].value,
-            ver: selected_ver,
-            index: v_index,
-            cpv = cat + "/" + pkg + "-" + ver,
+            cpv: current_pkg,
             format: "json"
         },
             function(json)
@@ -468,22 +460,15 @@ function doMerge(){
     );
 }
 
-/*
 function doUnmerge(){
     // Ajax call. unmerge the selected pkg
-    var v_index = document.getElementById("Ver_select").selectedIndex-1;
-    var v_data = versions_data[v_index];
-    var selected_ver = v_data[1];
-    var cat_select = document.getElementById("Cat_select");
-    var pkg_select = document.getElementById("Pkg_select");
-    var cpv = "";
+
+    if (current_pkg == ''){
+        return;
+    };
     $.getJSON("unmerge/",
         {
-            cat: cat_select.options[cat_select.selectedIndex].value,
-            pkg: pkg_select.options[pkg_select.selectedIndex].value,
-            ver: selected_ver,
-            index: v_index,
-            cpv = cat + "/" + pkg + "-" + ver,
+            cpv: current_pkg,
             format: "json"
         },
             function(json)
@@ -496,4 +481,4 @@ function doUnmerge(){
             }
     );
 }
-*/
+
