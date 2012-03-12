@@ -246,6 +246,33 @@ function debug(){
     var x = removeSubnodes(detail);
 }
 
+function getTarget()
+// Ajax call. Gets the categories and packages lists for the
+// selected view and then populates the "Categories" selector
+{
+    $.getJSON("targetchanged/",
+        {
+            target: this.options[this.selectedIndex].value,
+            format: "json"
+        },
+            function(json)
+            {
+                if (json['success'] == false){
+                    var message = "Target selector Failed to get the" +
+                        " target views, categories and pkgs data\n\n";
+                    alert(message + json['views'] + "\n\n" +
+                        json['categories'] + "\n\n" +
+                        json['pkgs']);
+                };
+                pkgs = json['pkgs'];
+                ret = populateCats(json['categories']);
+                alert("NEW categories: " + String(json['categories'].length) +
+                    " pkgs: " + String(pkgs.length));
+            }
+    );
+}
+
+
 function getPkgs()
 // Ajax call. Gets the categories and packages lists for the
 // selected view and then populates the "Categories" selector
@@ -410,4 +437,63 @@ function getCflags(){
     data = {"module": "NotImplemented"};
     displayConfig(current_pkg, data);
 }
+/*  For whatever reason, the following code breaks basic operation.
+function doMerge(){
+    // Ajax call. merge the selected pkg
+    var v_index = document.getElementById("Ver_select").selectedIndex-1;
+    if (v_index == 0){
+        return;
+    }
+    var v_data = versions_data[v_index];
+    var selected_ver = v_data[1];
+    var cat_select = document.getElementById("Cat_select");
+    var pkg_select = document.getElementById("Pkg_select");
+    $.getJSON("merge/",
+        {
+            cat: cat_select.options[cat_select.selectedIndex].value,
+            pkg: pkg_select.options[pkg_select.selectedIndex].value,
+            ver: selected_ver,
+            index: v_index,
+            cpv = cat + "/" + pkg + "-" + ver,
+            format: "json"
+        },
+            function(json)
+            {
+                if (json['success'] == false){
+                    var message = "Merge action Failed for package:\n\n";
+                    alert(message + json['cpv'] + "\n\n");
+                };
+            alert("Merge action started for package:'n'n" + json[cpv]);
+            }
+    );
+}
 
+/*
+function doUnmerge(){
+    // Ajax call. unmerge the selected pkg
+    var v_index = document.getElementById("Ver_select").selectedIndex-1;
+    var v_data = versions_data[v_index];
+    var selected_ver = v_data[1];
+    var cat_select = document.getElementById("Cat_select");
+    var pkg_select = document.getElementById("Pkg_select");
+    var cpv = "";
+    $.getJSON("unmerge/",
+        {
+            cat: cat_select.options[cat_select.selectedIndex].value,
+            pkg: pkg_select.options[pkg_select.selectedIndex].value,
+            ver: selected_ver,
+            index: v_index,
+            cpv = cat + "/" + pkg + "-" + ver,
+            format: "json"
+        },
+            function(json)
+            {
+                if (json['success'] == false){
+                    var message = "UnMerge action Failed for package:\n\n";
+                    alert(message + json['cpv'] + "\n\n");
+                };
+            alert("UnMerge action started for package:'n'n" +json[cpv])
+            }
+    );
+}
+*/

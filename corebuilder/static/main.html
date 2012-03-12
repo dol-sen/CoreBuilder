@@ -37,6 +37,8 @@
             function startForm()
             // Sets up our selectors for automatic action when one is selected.
             {
+                document.getElementById("target_select").selectedIndex = 0;
+                document.getElementById("target_select").onchange = getTarget;
                 document.getElementById("view_select").selectedIndex = 0;
                 document.getElementById("view_select").onchange = getPkgs;
                 document.getElementById("Cat_select").selectedIndex = 0;
@@ -50,6 +52,8 @@
                 document.getElementById("ebuild").onclick = getEbuild;
                 document.getElementById("use").onclick = getUse;
                 document.getElementById("cflags").onclick = getCflags;
+                //document.getElementById("merge").onclick = doMerge;
+                //document.getElementById("unmerge").onclick = doUnmerge;
             }
 
             var NONE = "{{NONE}}";
@@ -75,6 +79,26 @@
         <table>
             <tr>
                 <td>
+                    <form id = 'target_form'>{% csrf_token %}
+                        <label>Connected to:</label>
+                        <select id="target_select" name="Target_selector">
+                            {% if targets %}
+                                {% for v in targets %}
+                                    {% ifequal selected_target v %}
+                                        <option value="{{v}}" selected="selected">{{v}}</option>
+                                    {% else %}
+                                        <option value="{{v}}">{{v}}</option>
+                                    {% endifequal %}
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </form>
+                </td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td>
                     <form id="view_form" >{% csrf_token %}
                         <label>View Selector</label>
                         <select id="view_select" name="View_selector">
@@ -86,15 +110,14 @@
                                         <option value="{{v}}">{{v}}</option>
                                     {% endifequal %}
                                 {% endfor %}
-                                <!--<input id="view_submit" type="submit" value="Select" />-->
                             {% endif %}
                         </select>
                     </form>
                 </td>
                 <td>
                     &nbsp;&nbsp;&nbsp;Actions
-                    <input id="merge" type="submit" value="Merge" action="corebuilder/merge">
-                    <input id="unmerge" type="submit" value="UnMerge" action="corebuilder/merge">
+                    <input id="merge" type="submit" value="Merge">
+                    <input id="unmerge" type="submit" value="UnMerge">
                 </td>
             </tr>
         </table>

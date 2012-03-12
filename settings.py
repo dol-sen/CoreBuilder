@@ -126,9 +126,9 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Uncomment the next line to enable the admin:
-    # 'django.contrib.admin',
+    'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
-    # 'django.contrib.admindocs',
+    'django.contrib.admindocs',
     'corebuilder',
 )
 
@@ -154,3 +154,25 @@ LOGGING = {
         },
     }
 }
+
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_SECURE = True
+#ALWAYS_USE_TLS = False
+
+
+BACKEND = "pkgcore"
+
+INSTALL_TARGETS = {
+    'base_system': {
+        'ROOT': '/',
+        'PORTAGE_CONFIGROOT': '/',
+        'NAME': 'root'
+        },
+    'pasc2': {
+        'ROOT': "/home/pasc2/gentoo",
+        'PORTAGE_CONFIGROOT': "/home/pasc2/gentoo",
+        'NAME': 'pasc2'
+    }
+}
+
+DEFAULT_TARGET = "base_system"

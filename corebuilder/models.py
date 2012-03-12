@@ -3,9 +3,8 @@ from types import *
 
 #from django.db import models
 
-from backend import pms_instance
-
-pms_lib = pms_instance.pms_lib
+from CoreBuilder.settings import INSTALL_TARGETS
+from backend import load_target
 
 # Create your models here.
 
@@ -32,15 +31,19 @@ class Pkgs(object):
             'repo_path': 4, 'hardmasked': 5, 'unmasked': 6,
             'keywordmasked': 7}
 
-    def __init__(self, get_func=None):
+    def __init__(self, get_func=None, pms_lib=None):
         self._pkgs = [ALL, NONE]
         self.selected_cat = ''
         self.selected_pkg = ''
         self.selected_ver = ''
         self.shown_versions = []
+        self.pms_lib = pms_lib
 
         if get_func:
-            self._pkgs += get_func()
+            try:
+                self._pkgs += get_func()
+            except Exception as e:
+                print("Pkgs.__init__(); exception from get_func():\n", e)
 
     def select(self, cat=ALL, include_versions=False):
         #print "Pkgs.select(), self=", self
@@ -54,7 +57,7 @@ class Pkgs(object):
                     try:
                         pkgs.append(p.split('/')[1])
                     except:
-                        print "p.split('/') error p=", p
+                        print("p.split('/') error p=", p)
         else:
             pkgs = set()
             for p in self._pkgs:
@@ -68,8 +71,12 @@ class Pkgs(object):
 
 
     def versions(self, cp):
-        self.shown_versions = pms_lib.get_versions(cp, include_masked = True)
-        self.shown_versions.sort(reverse=True)
+        self.shown_versions = []
+        try:
+            self.shown_versions = self.pms_lib.get_versions(cp, include_masked = True)
+            self.shown_versions.sort(reverse=True)
+        except Exception as e:
+            print("Pkgs.versions: error from self.pms_lib.\n", e)
         vers = []
         i = 0
         for cpv in self.shown_versions:
@@ -94,7 +101,9 @@ class Pkgs(object):
 
 
 class Categories(object):
-    _categories = [NONE, ALL]
+
+    def __init__(self):
+        self._categories = [NONE, ALL]
 
     def __unicoide__(self):
         return "%s" % ', '.join(self._categories)
@@ -114,9 +123,8 @@ class Views(object):
     selected view
     """
     _views = ["-- Select --", "Trees", "Installed", "Not_Installed"]
-    selected = ""
 
-    def __init__(self):
+    def __init__(self, target_name=None):
         self.pkgs = {
             "-- Select --": Pkgs(),
             "Trees": None,
@@ -128,16 +136,22 @@ class Views(object):
             "Installed": None,
             "Not_Installed": None
         }
+        self.selected = ""
+
+        if target_name:
+            self.target_name = target_name
+            self.pms_instance = load_target(target_name)
+            self.pms_lib = self.pms_instance.pms_lib
 
     def all(self):
         return sorted(self._views)
 
     def select(self, view):
-        print "Views.select():", view
+        print("Views.select():", view)
         if view in ["-- Select --"]:
             _cats = [NONE]
         elif view in ["Trees", "Installed", "Not_Installed"]:
-            print "Views.select(): made it here :)"
+            print("Views.select(): made it here :)")
             cat = getattr(self, view)()
             if cat:
                 _cats = cat.get()
@@ -145,27 +159,27 @@ class Views(object):
                 _cats = ["-- ERROR --"]
         else:
             _cats = cats.get()
-        print "Views.select():", view, self.pkgs[view], len(self.pkgs[view]._pkgs)
+        print("Views.select():", view, self.pkgs[view], len(self.pkgs[view]._pkgs))
         return (_cats, self.pkgs[view].select('All'))
 
     def Trees(self):
         if not self.cats["Trees"]:
-            print "Views.Trees(), new Trees lists"
-            self.pkgs["Trees"] = Pkgs(pms_lib.get_allnodes)
-            print "Views.Trees(), pks length = ", self.pkgs["Trees"], len(self.pkgs["Trees"]._pkgs)
+            print("Views.Trees(), new Trees lists"), self.pms_instance
+            self.pkgs["Trees"] = Pkgs(self.pms_lib.get_allnodes, self.pms_lib)
+            print("Views.Trees(), pks length = ", self.pkgs["Trees"], len(self.pkgs["Trees"]._pkgs))
             self.cats["Trees"] = Categories()
             self.cats["Trees"]._populate(self.pkgs["Trees"].select())
-            print "Views.Trees(), cats length = ", len(self.cats["Trees"]._categories)
+            print("Views.Trees(), cats length = ", len(self.cats["Trees"]._categories))
         return self.cats["Trees"]
 
     def Installed(self):
         if not self.cats["Installed"]:
-            print "Views.Installed(), new Installed lists"
-            self.pkgs["Installed"] = Pkgs(pms_lib.get_installed_list)
-            print "Views.Installed(), pks length = ", self.pkgs["Installed"], len(self.pkgs["Installed"]._pkgs)
+            print("Views.Installed(), new Installed lists"), self.pms_instance
+            self.pkgs["Installed"] = Pkgs(self.pms_lib.get_installed_list, self.pms_lib)
+            print("Views.Installed(), pks length = ", self.pkgs["Installed"], len(self.pkgs["Installed"]._pkgs))
             self.cats["Installed"] = Categories()
             self.cats["Installed"]._populate(self.pkgs["Installed"].select())
-            print "Views.Installed(), cats length = ", len(self.cats["Installed"]._categories)
+            print("Views.Installed(), cats length = ", len(self.cats["Installed"]._categories))
         return self.cats["Installed"]
 
     def Not_Installed(self):
@@ -173,23 +187,23 @@ class Views(object):
             ct, pt = self.select("Trees")
             ci, pi = self.select("Installed")
             try:
-                print "Views.Not_Installed(), new Not_Installed lists"
+                print("Views.Not_Installed(), new Not_Installed lists")
                 spt = set(pt)
-                print len(spt)
+                print(len(spt))
                 spi = set(pi)
-                print len(spi)
-                print
+                print(len(spi))
+                print()
                 pkgset = spt.difference(spi)
-                print len(pkgset)
-                self.pkgs["Not_Installed"] = Pkgs()
+                print(len(pkgset))
+                self.pkgs["Not_Installed"] = Pkgs(pms_lib=self.pms_lib)
                 self.pkgs["Not_Installed"]._pkgs = list(pkgset)
             except Exeption as e:
-                print "Views.Not_Installed(), Exeption", e
+                print("Views.Not_Installed(), Exeption", e)
 
-            print "Views.Not_Installed(), pks length = ", len(self.pkgs["Not_Installed"]._pkgs)
+            print("Views.Not_Installed(), pks length = ", len(self.pkgs["Not_Installed"]._pkgs))
             self.cats["Not_Installed"] = Categories()
             self.cats["Not_Installed"]._populate(self.pkgs["Not_Installed"].select())
-            print "Views.Not_Installed(), cats length = ", len(self.cats["Not_Installed"]._categories)
+            print("Views.Not_Installed(), cats length = ", len(self.cats["Not_Installed"]._categories))
         return self.cats["Not_Installed"]
 
     @property
@@ -201,4 +215,7 @@ class Views(object):
         return self.pkgs["-- Select --"].legend_keys
 
 
-pkgviews = Views()
+#pkgviews = Views()
+
+print("MODELS initialized")
+
