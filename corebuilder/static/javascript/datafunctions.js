@@ -241,6 +241,19 @@ function displayConfig(cpv, metaobj)
     tabs_loaded['cflags'] = true;
 }
 
+function displayQueue(metaobj)
+// Display the package merge, unmerge queue
+{
+    var detail = document.getElementById("pkg_queue");
+    var x = removeSubnodes(detail);
+
+    myElement = document.createElement("h1");
+    myElement.innerHTML = "Backend Process Merge, Unmerge Queue";
+    detail.appendChild(myElement);
+    displayMeta(detail, metaobj);
+    tabs_loaded['queue'] = true;
+}
+
 function debug(){
     var detail = document.getElementById("debug");
     var x = removeSubnodes(detail);
@@ -436,6 +449,16 @@ function getCflags(){
     };
     data = {"module": "NotImplemented"};
     displayConfig(current_pkg, data);
+}
+
+function UpdateQueue(){
+    // Ajax call.  Update the queue status
+
+    if (tabs_loaded["queue"]){
+        return;
+    };
+    data = {"module": "NotImplemented"};
+    displayQueue(data);
 }
 
 function doMerge(){

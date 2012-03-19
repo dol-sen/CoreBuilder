@@ -52,6 +52,7 @@
                 document.getElementById("ebuild").onclick = getEbuild;
                 document.getElementById("use").onclick = getUse;
                 document.getElementById("cflags").onclick = getCflags;
+                document.getElementById("queue").onclick = UpdateQueue;
             }
 
             var NONE = "{{NONE}}";
@@ -61,9 +62,11 @@
             versions_data = [];
             current_pkg = "";
 
-            var tabs = ["summary", "deps", "chglog", "inst_files", "ebuild", "use", "cflags"];
+            var tabs = ["summary", "deps", "chglog", "inst_files", "ebuild",
+                "use", "cflags", "queue"];
             var tabs_loaded = {"summary":false, "deps":false, "chglog":false,
-                "inst_files":false, "ebuild":false, "use":false, "cflags":false};
+                "inst_files":false, "ebuild":false, "use":false, "cflags":false,
+                "queue":false};
 
             // Initialize our pkg_notebook tabs
             /*$(function() {
@@ -183,6 +186,7 @@
                 <li id="ebuild">Ebuild</li>
                 <li id="use">Use Flags</li>
                 <li id="cflags">C, CXX</li>
+                <li id="queue">Queue</li>
             </ul>
             <span class="clear"></span>
             <div id="tab_summary" class="pkg_notebook summary">
@@ -217,6 +221,10 @@
             </div>
             <div id="tab_cflags" class="pkg_notebook cflags">
                 <div id="pkg_cflags">
+                </div>
+            </div>
+            <div id="tab_queue" class="pkg_notebook queue">
+                <div id="pkg_queue">
                 </div>
             </div>
         </div>
