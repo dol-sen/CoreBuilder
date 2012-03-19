@@ -444,6 +444,7 @@ function doMerge(){
     if (current_pkg == ''){
         return;
     };
+    //alert("doMerge() started for package:'n'n");
     $.getJSON("merge/",
         {
             cpv: current_pkg,

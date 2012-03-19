@@ -52,8 +52,6 @@
                 document.getElementById("ebuild").onclick = getEbuild;
                 document.getElementById("use").onclick = getUse;
                 document.getElementById("cflags").onclick = getCflags;
-                document.getElementById("Merge").onclick = doMerge;
-                document.getElementById("Unmerge").onclick = doUnmerge;
             }
 
             var NONE = "{{NONE}}";
@@ -118,13 +116,13 @@
                     &nbsp;&nbsp;&nbsp;Actions
                 </td>
                 <td>
-                    <form id="Merge">{% csrf_token %}
-                        <input id="merge_btn" type="submit" value="Merge">
+                    <form id="Merge" action="" method="GET">{% csrf_token %}
+                        <input id="merge_btn" type="button" value="Merge" onClick="doMerge(this.form)">
                     </form>
                 </td>
                 <td>
-                    <form id="Unmerge">{% csrf_token %}
-                        <input id="unmerge_btn" type="submit" value="UnMerge">
+                    <form id="Unmerge" action="" method="GET">{% csrf_token %}
+                        <input id="unmerge_btn" type="button" value="UnMerge" onClick="doUnmerge(this.form)">
                     </form>
                 </td>
             </tr>
