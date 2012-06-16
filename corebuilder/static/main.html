@@ -3,13 +3,12 @@
         <title>CoreBuilder Main View</title>
         <table>
             <tr>
-                <td>
-                    <img src="{{MEDIA_URL}}images/banner4.png" width="468" height="60" alt="{{MEDIA_URL}}images/banner3.png" />
-                </td>
-                <!--<td>
-                    <p>Test Header column 2</p>
-                </td>
-            </tr></!-->
+                <span class="logo">
+                    <img src="{{MEDIA_URL}}images/corebuilder.png" width="230"
+                        height="60" alt="{{MEDIA_URL}}images/corebuilder.png" />
+                    <img class="webonized" src="{{MEDIA_URL}}images/webonized.png"
+                        width="90" height="60" alt="{{MEDIA_URL}}images/corebuilder.png"/>
+                </span>
         </table>
         <link rel="stylesheet" href="{{MEDIA_URL}}css/general.css" type="text/css" media="screen" />
         <style type="text/css">
@@ -18,16 +17,8 @@
         <!--<script src="http://code.jquery.com/jquery-latest.js"></script>-->
         <script type="text/javascript" src="{{MEDIA_URL}}javascript/jquery.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}javascript/jPaq.js"></script>
-        <!--<script type="text/javascript" src="{{MEDIA_URL}}javascript/main.js"></script>-->
         <script type="text/javascript" src="{{MEDIA_URL}}javascript/events.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}javascript/datafunctions.js"></script>
-        <!--<link rel="stylesheet" href="{{MEDIA_URL}}javascript/development-bundle/themes/ui-lightness/jquery.ui.all.css">
-        <link rel="stylesheet" href="{{MEDIA_URL}}javascript/css/ui-lightness/jquery-1.8.17-custom.css">
-        <script src="{{MEDIA_URL}}javascript/development-bundle/ui/jquery.ui.core.js"></script>
-        <script src="{{MEDIA_URL}}javascript/development-bundle/ui/jquery.ui.widget.js"></script>
-        <script src="{{MEDIA_URL}}javascript/development-bundle/ui/jquery.ui.mouse.js"></script>
-        <script src="{{MEDIA_URL}}javascript/development-bundle/ui/jquery.ui.sortable.js"></script>
-        <script src="{{MEDIA_URL}}javascript/development-bundle/ui/jquery.ui.tabs.js"></script>-->
 
         <script type="text/javascript">
 
@@ -67,11 +58,6 @@
             var tabs_loaded = {"summary":false, "deps":false, "chglog":false,
                 "inst_files":false, "ebuild":false, "use":false, "cflags":false,
                 "queue":false};
-
-            // Initialize our pkg_notebook tabs
-            /*$(function() {
-                $( "#pkg_notebook" ).tabs().find( ".ui-tabs-nav" ).sortable({ axis: "x" });
-            });*/
 
     </script>
     </head>
@@ -161,7 +147,6 @@
                             <center><select id="Ver_select" name="Ver_selector" size="10">
                                 <option value="{{NONE}}">{{NONE}}</option>
                             </select></center>
-                            <!--<center><input type="submit" value="Select" /></center>-->
                         </form>
                     </body>
                 </td>
@@ -169,15 +154,7 @@
         </table>
         <hr/>
         <div id="pkg_notebook">
-            <!--<ul>
-                <li id="summary"><a href="#tab_summary">Summary</a></li>
-                <li id="deps"><a href="#tab_deps">Dependencies</a></li>
-                <li id="chglog"><a href="#tab_chglog">ChangeLog</a></li>
-                <li id="inst_files"><a href="#tab_inst_files">Installed Files</a></li>
-                <li id="ebuild"><a href="#tab_ebuild">Ebuild</a></li>
-                <li id="use"><a href="#tab_use">Use Flags</a></li>
-                <li id="cflags"><a href="#tab_cflags">C, CXX</a></li>
-            </ul>-->
+            </ul>
             <ul class="menu">
                 <li id="summary">Summary</li>
                 <li id="deps">Dependencies</li>
