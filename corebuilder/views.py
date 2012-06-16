@@ -59,15 +59,17 @@ def target_changed(request):
             target_name = GET['target']
         else:
             target_name = ''
-        print "selected target:", target_name
+        selected = target_view.selected
+        print "Views.target_changed(), selected target:", target_name, loaded_views.keys(), target_view
         if target_name not in loaded_views:
+            print("Views.target_changed() new loaded_views target:", target_name)
             loaded_views[target_name] = Views(target_name=target_name)
-            target_view = loaded_views[target_name]
-        target_view.selected = ""
+        target_view = loaded_views[target_name]
+        target_view.selected = selected
         results['categories'], results['pkgs'] = target_view.select(
             target_view.selected)
         results['success'] = True
-    print "target_changed(), new target_view =", target_view.target_name, target_view
+    print "Views.target_changed() , new target_view =", target_view.target_name, target_view
     #print "cats", results['categories']
     #print "pkgs:", results['pkgs']
     return HttpResponse(json.dumps(results), mimetype='application/json')
