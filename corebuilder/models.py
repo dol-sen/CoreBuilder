@@ -142,12 +142,13 @@ class Views(object):
             self.target_name = target_name
             self.pms_instance = load_target(target_name)
             self.pms_lib = self.pms_instance.pms_lib
+        print("Views.__init__() pms_instance =", self.pms_instance)
 
     def all(self):
         return sorted(self._views)
 
     def select(self, view):
-        print("Views.select():", view)
+        print("Views.select():", self.pms_instance, self.target_name, view)
         if view in ["-- Select --"]:
             _cats = [NONE]
         elif view in ["Trees", "Installed", "Not_Installed"]:
@@ -159,27 +160,27 @@ class Views(object):
                 _cats = ["-- ERROR --"]
         else:
             _cats = cats.get()
-        print("Views.select():", view, self.pkgs[view], len(self.pkgs[view]._pkgs))
+        print("Views.select():", self.target_name, view, self.pkgs[view], len(self.pkgs[view]._pkgs))
         return (_cats, self.pkgs[view].select('All'))
 
     def Trees(self):
         if not self.cats["Trees"]:
-            print("Views.Trees(), new Trees lists"), self.pms_instance
+            print("Views.Trees(), new Trees lists"), self.target_name, self.pms_instance
             self.pkgs["Trees"] = Pkgs(self.pms_lib.get_allnodes, self.pms_lib)
-            print("Views.Trees(), pks length = ", self.pkgs["Trees"], len(self.pkgs["Trees"]._pkgs))
+            print("Views.Trees(), pkgs length = ", self.pkgs["Trees"], len(self.pkgs["Trees"]._pkgs))
             self.cats["Trees"] = Categories()
             self.cats["Trees"]._populate(self.pkgs["Trees"].select())
-            print("Views.Trees(), cats length = ", len(self.cats["Trees"]._categories))
+            print("Views.Trees()", self.target_name, " cats length = ", len(self.cats["Trees"]._categories))
         return self.cats["Trees"]
 
     def Installed(self):
         if not self.cats["Installed"]:
-            print("Views.Installed(), new Installed lists"), self.pms_instance
+            print("Views.Installed(), new Installed lists"), self.target_name,  self.pms_instance
             self.pkgs["Installed"] = Pkgs(self.pms_lib.get_installed_list, self.pms_lib)
             print("Views.Installed(), pks length = ", self.pkgs["Installed"], len(self.pkgs["Installed"]._pkgs))
             self.cats["Installed"] = Categories()
             self.cats["Installed"]._populate(self.pkgs["Installed"].select())
-            print("Views.Installed(), cats length = ", len(self.cats["Installed"]._categories))
+            print("Views.Installed()", self.target_name,", cats length = ", len(self.cats["Installed"]._categories))
         return self.cats["Installed"]
 
     def Not_Installed(self):
