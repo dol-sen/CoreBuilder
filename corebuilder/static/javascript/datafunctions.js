@@ -76,13 +76,14 @@ function build_versions()
 {
     var vers = [];
     var max_v = 0;
-    var max_s = 4;
+    var max_s = 3;
 
     var data = [];
     var ver = '';
     var slot = '';
     var repo = '';
-    var pad = "_";
+    var pad = '.';
+    var sep = '|'
     var v_str = String;
 
     // determine max lengths
@@ -103,7 +104,7 @@ function build_versions()
         slot = data[2];
         repo = data[3];
         v_str = ver.padRight(max_v+1, pad).concat(
-            ' | ', slot.padCenter(max_s, pad), ' | ', repo);
+            sep, slot.padCenter(max_s, pad), sep, repo);
         vers.push(v_str)
     }
     return vers;
